@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
-from discord.ext.commands import CommandNotFound
-import json
-import asyncio
+from discord.ext.commands import CommandNotFound, cooldown, BucketType
 from discord_slash import SlashCommand, SlashContext
 from discord_slash.utils.manage_commands import create_option
 import random
+import json
+import asyncio
 
 bot = commands.Bot(command_prefix="||")
 bot.remove_command("help")
@@ -57,6 +57,7 @@ async def help(ctx):
         await ctx.send(embed=em)
 
 @slash.slash(name = 'ticket', description = 'Открыть тикет', guild_ids = [350817461328805888])
+@commands.cooldown(1, 30, commands.BucketType.user)
 # @bot.command()
 async def ticket(ctx, *, args = None):
 
@@ -420,7 +421,12 @@ async def deladminrole(ctx, role_id=None):
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, CommandNotFound):
-        await ctx.reply(f'Ай ой! Такой команды нет...', delete_after=10)
+        await ctx.send(f'Ай ой! Такой команды нет...', delete_after=10)
+
+@ticket.error
+async def cooldownerror(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.send('Подожди %.0f секунд чтобы повторить команду.' % error.retry_after, delete_after=10)
 
 @bot.event
 async def ch_pr():
